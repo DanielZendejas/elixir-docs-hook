@@ -1,0 +1,56 @@
+#!/usr/bin/env ruby
+
+ROOT = 'apps'.freeze
+ELIXIR_EXTENSIONS = ['.ex', '.exs'].freeze
+DOCUMENTATION_ATTRIBUTES = ['@moduledoc', '@doc', '@apidoc'].freeze
+COMMON_MISTAKES = {
+  'campaign' => ['campaing'],
+  'string' => ['strign'],
+  'update' => ['udpate'],
+}
+
+class Hook
+  @valid_commit = true
+  def self.work_directory(dir_name)
+    do_work_directory(dir_name)
+    unless @valid_commit
+      throw :error
+    end
+  end
+
+  private
+
+  def self.do_work_directory(dir_name)
+    Dir.foreach(dir_name) do |item_name|
+      next if item_name == '.' or item_name == '..'
+
+      full_name = "#{dir_name}/#{item_name}"
+      if File.directory?(full_name)
+        do_work_directory(full_name)
+      end
+
+      if ELIXIR_EXTENSIONS.include?(File.extname(full_name))
+        handle_elixir_source_file(full_name)
+      end
+    end
+  end
+
+  def self.handle_elixir_source_file(file_name)
+    file_content = File.open(file_name).read
+    regex = %(#{DOCUMENTATION_ATTRIBUTES.join('|')} """([^"]*)""")
+    docs_blocks = file_content.scan(Regexp.new(regex, Regexp::MULTILINE))
+    docs_blocks.each do |block|
+      body = block[0]
+      next if body == nil or body == ''
+      COMMON_MISTAKES.each do |correct, mistakes|
+        mistakes.each do |mistake|
+          next if body.scan(mistake) == []
+          puts %(\e[31m*** FOUND THE MISTAKE \e[0m\e[41m#{mistake}\e[0m\e[31m in #{file_name}:\n #{body}\e[0m)
+          @valid_commit = false
+        end
+      end
+    end
+  end
+end
+
+Hook.work_directory(ROOT)
