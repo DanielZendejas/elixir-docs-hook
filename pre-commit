@@ -37,7 +37,7 @@ class Hook
 
   def self.handle_elixir_source_file(file_name)
     file_content = File.open(file_name).read
-    regex = %(#{DOCUMENTATION_ATTRIBUTES.join('|')} """([^"]*)""")
+    regex = %([#{DOCUMENTATION_ATTRIBUTES.join('|')}] """([^"]*)""")
     docs_blocks = file_content.scan(Regexp.new(regex, Regexp::MULTILINE))
     docs_blocks.each do |block|
       body = block[0]
