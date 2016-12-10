@@ -3,11 +3,7 @@
 ROOT = 'apps'.freeze
 ELIXIR_EXTENSIONS = ['.ex', '.exs'].freeze
 DOCUMENTATION_ATTRIBUTES = ['@moduledoc', '@doc', '@apidoc'].freeze
-COMMON_MISTAKES = {
-  'campaign' => ['campaing'],
-  'string' => ['strign'],
-  'update' => ['udpate'],
-}
+COMMON_MISTAKES = ['campaing', 'string', 'udpate']
 
 class Hook
   @valid_commit = true
@@ -42,12 +38,10 @@ class Hook
     docs_blocks.each do |block|
       body = block[0]
       next if body == nil or body == ''
-      COMMON_MISTAKES.each do |correct, mistakes|
-        mistakes.each do |mistake|
-          next if body.scan(mistake) == []
-          puts %(\e[31m*** FOUND THE MISTAKE \e[0m\e[41m#{mistake}\e[0m\e[31m in #{file_name}:\n #{body}\e[0m)
-          @valid_commit = false
-        end
+      COMMON_MISTAKES.each do |mistake|
+        next if body.scan(mistake) == []
+        puts %(\e[31m*** FOUND THE MISTAKE \e[0m\e[41m#{mistake}\e[0m\e[31m in #{file_name}:\n #{body}\e[0m)
+        @valid_commit = false
       end
     end
   end
